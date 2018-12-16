@@ -8,7 +8,7 @@ import sms_send
 import lxml
 
 if __name__=="__main__":
-
+    #爬虫初始网络参数，不要修改
     postdata={
             'username':"username",
             'password':"password",
@@ -19,8 +19,14 @@ if __name__=="__main__":
                 }   
     post_url='http://us.nwpu.edu.cn/eams/login.action'
     get_grade_url='http://us.nwpu.edu.cn/eams/teach/grade/course/person!search.action?semesterId=18&projectType='
-    
-    
+    headers={
+           'user-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
+            'Host':'www.santostang.com',
+            'Connection': 'keep-alive',
+            'Cache-Control': 'max-age=0'
+            }
+    #
+    #修改登录翱翔门户帐号的函数定义，不用修改
     def change_login_information(username,password):
         global postdata
         postdata={
@@ -31,14 +37,11 @@ if __name__=="__main__":
          #   'redirect_to':'http://www.santostang.com/wp-admin/profile.php',
          #   'wp-submit':'登陆',
                 }   
-    headers={
-           'user-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
-            'Host':'www.santostang.com',
-            'Connection': 'keep-alive',
-            'Cache-Control': 'max-age=0'
-            }
+    #
+    #循环通知参数，times用来统计循环次数，i用来确定程序运行成功。
     times=1
     i=1
+    #
     while True:
 
     #session.cookies.load(ignore_discard=True)
