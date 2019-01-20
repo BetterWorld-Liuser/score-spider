@@ -2,15 +2,13 @@
 
 import requests
 import pandas as pd
-import MySQLdb
+import pymysql
 import time
 import sms_send
 import lxml
 import sys
 
 
-reload(sys)
-sys.setdefaultencoding('utf-8')
 
 if __name__=="__main__":
 
@@ -68,16 +66,16 @@ if __name__=="__main__":
 
 
         try:
-            conn=MySQLdb.connect(host='localhost',user='root',passwd='haowanma',db='work',charset='utf8')
+            conn=pymysql.connect(host='localhost',user='root',passwd='233wsgtc',db='grades_spider',charset='utf8')
             cur=conn.cursor()
-            cur.execute("select * from inform_list")
+            cur.execute("select * from list")
             data=cur.fetchall()
         except:
             print("can't connect sql")
     #连接数据库获得数据,元组形式
 
-        time_seach=1
-        kon=int("1")
+        time_search=1
+        kong=int("1")
         for datastream in data:
             try:
                 if len(datastream[1])>12|len(datastream[1])==0:
@@ -102,6 +100,7 @@ if __name__=="__main__":
                 login_page =session.post(post_url, data=postdata,headers=headers)
                 grade_page=session.get(get_grade_url,headers=headers)
                 tb=pd.read_html(grade_page.text)[0]
+                print(tb)
                 col_online_str=tb.shape[0]
                 col_online=int(col_online_str)#得到目前网上成绩的行数并转换为int
                 col_base=datastream[5]#得到目前数据库里成绩的行数
@@ -111,7 +110,7 @@ if __name__=="__main__":
                 if datastream[4]==0:
                     name=[datastream[1]]
                     
-                    cur.execute("update inform_list set score=%d where username='%s'"%(kon,datastream[2]))
+                    cur.execute("update inform_list set score=%d where username='%s'"%(kong,datastream[2]))
                     sms_send.error_sender(datastream[6],name)
                     print("密码修改短信已发送")
                 continue
@@ -142,7 +141,7 @@ if __name__=="__main__":
                 
             print("完成%s的搜索"%datastream[1])
             #print("update inform_list set line=%d where name='%s'"%(col_online,params[0]))
-            time_seach+=1
+            time_search+=1
             
             
 
