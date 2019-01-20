@@ -6,9 +6,14 @@ import MySQLdb
 import time
 import sms_send
 import lxml
+import sys
+
+
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 if __name__=="__main__":
-    #爬虫初始网络参数，不要修改
+
     postdata={
             'username':"username",
             'password':"password",
@@ -19,14 +24,8 @@ if __name__=="__main__":
                 }   
     post_url='http://us.nwpu.edu.cn/eams/login.action'
     get_grade_url='http://us.nwpu.edu.cn/eams/teach/grade/course/person!search.action?semesterId=18&projectType='
-    headers={
-           'user-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
-            'Host':'www.santostang.com',
-            'Connection': 'keep-alive',
-            'Cache-Control': 'max-age=0'
-            }
-    #
-    #修改登录翱翔门户帐号的函数定义，不用修改
+    
+    
     def change_login_information(username,password):
         global postdata
         postdata={
@@ -37,11 +36,14 @@ if __name__=="__main__":
          #   'redirect_to':'http://www.santostang.com/wp-admin/profile.php',
          #   'wp-submit':'登陆',
                 }   
-    #
-    #循环通知参数，times用来统计循环次数，i用来确定程序运行成功。
+    headers={
+           'user-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
+            'Host':'www.santostang.com',
+            'Connection': 'keep-alive',
+            'Cache-Control': 'max-age=0'
+            }
     times=1
     i=1
-    #
     while True:
 
     #session.cookies.load(ignore_discard=True)
@@ -65,27 +67,59 @@ if __name__=="__main__":
     #       print("success")
 
 
-    #
-        conn=MySQLdb.connect(host='127.0.0.1',user='root',passwd="123456",db='work',charset='utf8')
-        cur=conn.cursor()
-        cur.execute("select * from inform_list")
-        data=cur.fetchall()
+        try:
+            conn=MySQLdb.connect(host='localhost',user='root',passwd='haowanma',db='work',charset='utf8')
+            cur=conn.cursor()
+            cur.execute("select * from inform_list")
+            data=cur.fetchall()
+        except:
+            print("can't connect sql")
     #连接数据库获得数据,元组形式
 
         time_seach=1
+        kon=int("1")
         for datastream in data:
-
+            try:
+                if len(datastream[1])>12|len(datastream[1])==0:
+                    print(datastream[1])
+                    cur.execute("delete from inform_list where name='%s'"%datastream[1])
+                    print("成功删除一组数据")
+                    continue
+                if len(datastream[6])!=11:
+                    cur.execute("delete from inform_list where number='%s'"%datastream[6])
+                    print("成功删除一组数据")
+                    continue
+                if len(datastream[2])!=10:
+                    cur.execute("delete from inform_listwhere username='%s'"%datastream[2])
+                    print("成功删除一组数据")
+                    continue
+            except:
+                print("数据库操作错误")    
             change_login_information(datastream[2],datastream[3])
             #print(postdata)
-            session=requests.session()
-            login_page =session.post(post_url, data=postdata,headers=headers)
-            grade_page=session.get(get_grade_url,headers=headers)
-            tb=pd.read_html(grade_page.text)[0]
-            col_online_str=tb.shape[0]
-            col_online=int(col_online_str)#得到目前网上成绩的行数并转换为int
-            col_base=datastream[5]#得到目前数据库里成绩的行数
+            try:
+                session=requests.session()
+                login_page =session.post(post_url, data=postdata,headers=headers)
+                grade_page=session.get(get_grade_url,headers=headers)
+                tb=pd.read_html(grade_page.text)[0]
+                col_online_str=tb.shape[0]
+                col_online=int(col_online_str)#得到目前网上成绩的行数并转换为int
+                col_base=datastream[5]#得到目前数据库里成绩的行数
+            except:
+                
+                print("无法连接至学校网络")
+                if datastream[4]==0:
+                    name=[datastream[1]]
+                    
+                    cur.execute("update inform_list set score=%d where username='%s'"%(kon,datastream[2]))
+                    sms_send.error_sender(datastream[6],name)
+                    print("密码修改短信已发送")
+                continue
             if col_base!=col_online:
                 now_data=tb.values#获取每一行的数据，形成多维矩阵
+                if pd.isnull(now_data[0][0]):
+                    print("无成绩信息")
+                    continue
                 col_number=0
                 km=now_data[col_number][3]
                 xf=now_data[col_number][5]
@@ -97,12 +131,21 @@ if __name__=="__main__":
                 params=[datastream[1],km,xf,pscj,kscj,zzcj,xfj]
                 try:
                     sms_send.sender(number,params)
+                    print("%s的短信发送成功"%datastream[1])
                 except:
-                    print('error')
-                cur.execute("update inform_list set line=%d where name='%s'"%(col_online,params[0]))
-            print("完成第%d次搜索"%(time_seach))
-                #print("update inform_list set line=%d where name='%s'"%(col_online,params[0]))
+                    print('无法发送短信')
+                try:
+                    cur.execute("update inform_list set line=%d where name='%s'"%(col_online,datastream[1]))
+                    print("%s的数据完成更新"%datastream[1])
+                except:
+                    print("%s更新数据库失败"%datastream[1])
+                
+            print("完成%s的搜索"%datastream[1])
+            #print("update inform_list set line=%d where name='%s'"%(col_online,params[0]))
             time_seach+=1
+            
+            
+
         cur.close()
         conn.commit()
         conn.close()
@@ -116,7 +159,7 @@ if __name__=="__main__":
             #    sms_send.sender()
       #  print (data)
         
-        time.sleep(500)
+        time.sleep(3600)
     #    with open(r'F:\stock.csv','r',encoding='utf-8') as csvfile:
     #        csv_reader=csv.reader(csvfile)
     #        score=[]
