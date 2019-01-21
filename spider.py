@@ -66,7 +66,7 @@ if __name__=="__main__":
 
 
         try:
-            conn=pymysql.connect(host='localhost',user='root',passwd='233wsgtc',db='grades_spider',charset='utf8')
+            conn=pymysql.connect(host='23.105.221.4',user='root',passwd='233wsgtc',db='grades_spider',charset='utf8')
             cur=conn.cursor()
             cur.execute("select * from list")
             data=cur.fetchall()
