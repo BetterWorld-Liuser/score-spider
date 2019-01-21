@@ -7,7 +7,7 @@ import time
 import sms_send
 import lxml
 import sys
-
+import numpy
 
 
 if __name__=="__main__":
@@ -24,6 +24,26 @@ if __name__=="__main__":
     get_grade_url='http://us.nwpu.edu.cn/eams/teach/grade/course/person!search.action?semesterId=18&projectType='
     
     
+    def compare_array(A,B):
+        i=0
+        k=0
+        compare_times=0
+        arr=[]
+        for a in A:
+            i+=1
+        for b in B:
+            k+=1
+        if i>k:
+            for n in range(k):
+                if A[n]!=B[n]:
+                    for l in range(9):
+                        arr.append(A[n+l])
+                    return arr
+                if n==k:
+                    for l in range(9):
+                        arr.append(A[k+2+l])
+                    return arr
+        return "找不到差异数据"
     def change_login_information(username,password):
         global postdata
         postdata={
@@ -68,7 +88,7 @@ if __name__=="__main__":
         try:
             conn=pymysql.connect(host='23.105.221.4',user='root',passwd='233wsgtc',db='grades_spider',charset='utf8')
             cur=conn.cursor()
-            cur.execute("select * from list")
+            cur.execute("select * from list;")
             data=cur.fetchall()
         except:
             print("can't connect sql")
@@ -80,61 +100,85 @@ if __name__=="__main__":
             try:
                 if len(datastream[1])>12|len(datastream[1])==0:
                     print(datastream[1])
-                    cur.execute("delete from inform_list where name='%s'"%datastream[1])
+                    cur.execute("delete from inform_list where name='%s';"%datastream[1])
                     print("成功删除一组数据")
                     continue
-                if len(datastream[6])!=11:
-                    cur.execute("delete from inform_list where number='%s'"%datastream[6])
-                    print("成功删除一组数据")
-                    continue
-                if len(datastream[2])!=10:
-                    cur.execute("delete from inform_listwhere username='%s'"%datastream[2])
-                    print("成功删除一组数据")
-                    continue
+                #if len(datastream[6])!=11:
+                #    cur.execute("delete from inform_list where number='%s'"%datastream[6])
+                #    print("成功删除一组数据")
+                #    continue
+                #if len(datastream[2])!=10:
+                #    cur.execute("delete from inform_listwhere username='%s'"%datastream[2])
+                #    print("成功删除一组数据")
+                #    continue
             except:
-                print("数据库操作错误")    
+                print("数据库整理操作异常")    
             change_login_information(datastream[2],datastream[3])
             #print(postdata)
             try:
                 session=requests.session()
                 login_page =session.post(post_url, data=postdata,headers=headers)
                 grade_page=session.get(get_grade_url,headers=headers)
+
+
                 tb=pd.read_html(grade_page.text)[0]
-                print(tb)
+                tb_array=tb.values
+                to_list_str=[]
+                for a in tb_array:
+                    for n in a:
+                        to_list_str.append(n)#生成一维数组
+                to_list_str = [str(i) for i in to_list_str]
+                to_list_str='|'.join(to_list_str)
+                print(to_list_str)
+                content=datastream[7]
+                print(content)
+                if(content=='0'):
+                    content=to_list_str
+                    print("update list set content='%s' where name='%s';"%(content,datastream[1]))
+                    cur.execute("update list set content='%s' where name='%s';"%(content,datastream[1]))
+                    cur.execute("update list set col=%d where name='%s';"%(int(tb.shape[0]),datastream[1]))
+                    continue
+                else:
+                    content=content.split('|')
+                    result=compare_array(to_list_str,content)
+
+
+
+                
                 col_online_str=tb.shape[0]
                 col_online=int(col_online_str)#得到目前网上成绩的行数并转换为int
-                col_base=datastream[5]#得到目前数据库里成绩的行数
+                col_database=datastream[8]#得到目前数据库里成绩的行数
             except:
                 
                 print("无法连接至学校网络")
                 if datastream[4]==0:
                     name=[datastream[1]]
                     
-                    cur.execute("update inform_list set score=%d where username='%s'"%(kong,datastream[2]))
+                    cur.execute("update inform_list set score=%d where username='%s';"%(kong,datastream[2]))
                     sms_send.error_sender(datastream[6],name)
-                    print("密码修改短信已发送")
+                    print("异常短信已发送")
                 continue
-            if col_base!=col_online:
+            if col_database!=col_online:
                 now_data=tb.values#获取每一行的数据，形成多维矩阵
                 if pd.isnull(now_data[0][0]):
                     print("无成绩信息")
                     continue
                 col_number=0
-                km=now_data[col_number][3]
-                xf=now_data[col_number][5]
-                pscj=now_data[col_number][6]
-                kscj=now_data[col_number][7]
-                zzcj=now_data[col_number][9]
-                xfj=now_data[col_number][10]
-                number=datastream[6]
+                km=result[2]
+                xf=result[4]
+                pscj=result[5]
+                kscj=result[6]
+                zzcj=result[8]
+                xfj=result[9]
+                number=datastream[4]
                 params=[datastream[1],km,xf,pscj,kscj,zzcj,xfj]
                 try:
-                    sms_send.sender(number,params)
+  #测试取消                  #sms_send.sender(number,params)
                     print("%s的短信发送成功"%datastream[1])
                 except:
                     print('无法发送短信')
                 try:
-                    cur.execute("update inform_list set line=%d where name='%s'"%(col_online,datastream[1]))
+                    cur.execute("update inform_list set line=%d where name='%s';"%(col_online,datastream[1]))
                     print("%s的数据完成更新"%datastream[1])
                 except:
                     print("%s更新数据库失败"%datastream[1])
