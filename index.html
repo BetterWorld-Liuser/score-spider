@@ -1,0 +1,64 @@
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+
+</head>
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdn.bootcss.com/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://cdn.bootcss.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+
+<style>
+    .test{
+        height:100%;
+        width:100%;
+        background:black;
+        position:absolute;
+
+    }
+    .container-fluid{
+        background:white;
+        width:60%;
+        height:auto;
+        top:5%;
+        position: relative;
+        padding:5%;
+        border-radius:1%;
+    }
+    .front{
+        font-family:"Microsoft YaHei",微软雅黑,"MicrosoftJhengHei",华文细黑,STHeiti,MingLiu;
+    }
+    .front-normal{
+        font-size:80%
+    }
+</style>
+<body>
+<div class="test">
+    <div class="container-fluid front">
+                <form action="/addstatic.php" method="POST">
+                        <div class="form-group">
+                          <label for="exampleInputEmail1">学生姓名：</label>
+                          <input type="name" class="form-control" id="exampleInputEmail1" placeholder="name">
+                        </div>
+                        <div class="form-group">
+                          <label for="exampleInputPassword1">学生学号:</label>
+                          <input type="id" class="form-control" id="exampleInputPassword1" placeholder="id">
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">帐号密码:</label>
+                            <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
+                        </div>
+                        <div class="form-group">
+                                <label for="exampleInputPassword1">通知电话：</label>
+                                <input type="number" class="form-control" id="exampleInputPassword1" placeholder="number">
+                        </div>
+                            <button type="submit" class="btn btn-default">Submit</button>
+                        <p class="front-normal">您需要了解的是：<br>1.输入你的信息，每次成绩公布就会第一时间短信通知。<br>2.个人的做的项目，与学校暂时没有关系。<br>3.本网站安全措施很差（几乎没有），因为本人很挫。<br>4.服务器并不会保存你们的成绩，请放心但帐号和密码是必须保存的。<br>5.由于我技术很挫，服务器可能会不定期抽风等等，乱发短信，巴拉巴拉哈哈哈...</p>
+                    </form>
+                    
+    </div>
+</div>
+</body>
